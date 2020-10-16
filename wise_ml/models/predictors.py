@@ -86,7 +86,7 @@ def predict_low_redshift(spec_arr):
         N length array contained predicted array values
     """
 
-    model = get_redshift_predictor()
+    model = get_low_redshift_predictor()
     scaler = get_lr_scaler()
     scaled_spec_arr = scaler.transform(spec_arr)
     pred_redshift = model.predict(scaled_spec_arr)
