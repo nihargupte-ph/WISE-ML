@@ -41,7 +41,7 @@ axs[2].set_xlabel("W3")
 axs[3].scatter(features.iloc[::n_divisions, 3], target[::n_divisions], s=.1)
 axs[3].set_ylabel("Redshift")
 axs[3].set_xlabel("W4")
-
+plt.savefig("/home/n/Documents/Research/WISE-ML/plots/ANNZ2_redshift.pdf")
 # %%
 fig, axs = plt.subplots(5, figsize=(8, 6))
 fig.tight_layout()
@@ -63,5 +63,31 @@ axs[3].set_xlabel("W4")
 sn.distplot(x=train_test_W1W2W3W4['W4mag'], ax=axs[3])
 axs[4].set_xlabel("Redshift")
 sn.distplot(x=train_test_W1W2W3W4['REDSHIFT'], ax=axs[4])
+
+# %%
+from sklearn.decomposition import PCA
+pca = PCA(n_components=4)
+plot_df = train_test_W1W2W3W4.loc[train_test_W1W2W3W4['REDSHIFT'] < 2]
+projected = pca.fit_transform(plot_df[['W1mag', 'W2mag', 'W3mag', 'W4mag']])
+print(pca.explained_variance_ratio_)
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(projected[:, 0], projected[:, 1], plot_df['REDSHIFT'], c=plot_df['REDSHIFT'], s=2)
+ax.set_xlabel('PCA 1')
+ax.set_ylabel('PCA 2')
+ax.set_zlabel('Redshift')
+plt.show()
+# %%
+plot_df = train_test_W1W2.loc[train_test_W1W2['REDSHIFT'] < 1]
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(plot_df['W1mag'], plot_df['W2mag'], plot_df['REDSHIFT'], c=plot_df['REDSHIFT'], s=2)
+ax.set_xlabel('W1 magnitude')
+ax.set_ylabel('W2 magnitude')
+ax.set_zlabel('Redshift')
+
+plt.show()
 
 # %%

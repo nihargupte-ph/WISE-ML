@@ -15,10 +15,11 @@ actual_pred_redshift = np.c_[train_test_W1W2W3W4.iloc[:1000, :]['REDSHIFT'], red
 print(actual_pred_redshift[100:200:20, :])
 
 # Mean error
-print(np.mean(actual_pred_redshift[:, 0] - actual_pred_redshift[:, 1]))
+print(np.mean(np.abs(actual_pred_redshift[:, 0] - actual_pred_redshift[:, 1])))
 # %%
 # Predict redshift using a low predictor
-redshift = predictors.predict_low_redshift(train_test_W1W2W3W4.iloc[::10, 2:10:2])
+# Note it is using only 2 inputs here! 
+redshift = predictors.predict_low_redshift(train_test_W1W2W3W4.iloc[::10, 2:6:2])
 
 actual_pred_redshift = np.c_[train_test_W1W2W3W4.iloc[::10, :]['REDSHIFT'], redshift]
 print(actual_pred_redshift[100:200:20, :])
