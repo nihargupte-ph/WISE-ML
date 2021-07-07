@@ -2,75 +2,56 @@
 import os
 import pickle
 from joblib import dump, load
+import joblib
 
 from tensorflow import keras
 
 #%%
-def get_low_redshift_predictor():
+def get_redshift_predictor(redshift_range=[0, 1.5], n_inputs=4):
     """ 
-    Returns
+    For getting an already saved redshift predictor. 
+
+    Parameters
     --------------
-    model : tensorflow.python.keras.engine.sequential.Sequential
-        Low redshift tensorflow model
-    """
+    redshift_range : list 
+        Loads redshift predictor within the specified range. Default is [0, 1.5]
 
-    model = keras.models.load_model(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lr_predictor'))
-    return model
+    n_inputs : int
+        Number of inputs you want to the network. This the number of spectroscopic bands. Should be either 2 or 4 as far as I understand.
 
-
-#%%
-def get_redshift_predictor():
-    """ 
     Returns
     --------------
     model : tensorflow.python.keras.engine.sequential.Sequential
         full redshift tensorflow model
     """
 
-    model = keras.models.load_model(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'r_predictor'))
+    model = keras.models.load_model(os.path.join(os.path.dirname(os.path.realpath(__file__)), "keras_models", f'{redshift_range}_{n_inputs}_predictor.h5'))
     return model
 
 # %%
-def get_r_scaler(size):
+def get_r_scaler(redshift_range=[0, 1.5], n_inputs=4):
     """ 
     Parameters
     --------------
-    size : int 
-        Either 2 or 4 corresponding to 2 or 4 scaling
+    redshift_range : list 
+        Loads redshift predictor within the specified range. Default is [0, 1.5]
+
+    n_inputs : int
+        Number of inputs you want to the network. This the number of spectroscopic bands. Should be either 2 or 4 as far as I understand.
+
     Returns
     --------------
     model : sklearn.preprocessing.StandardScaler
         Scaler used to scale W1W2W3W4 bands before passing into neural network
     """
-    if size == 4:
-        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'r_scaler'), 'rb') as f:
-            scaler = pickle.load(f)
-    elif size == 2:
-        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), '2r_scaler'), 'rb') as f:
-            scaler = pickle.load(f)
-    return scaler
-# %%
-def get_lr_scaler(size):
-    """ 
-    Parameters
-    --------------
-    size : int 
-        Either 2 or 4 corresponding to 2 or 4 scaling
-    Returns
-    --------------
-    model : sklearn.preprocessing.StandardScaler
-        Scaler used to scale W1W2W3W4 bands before passing into neural network
-    """
-    if size == 4:
-        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lr_scaler'), 'rb') as f:
-            scaler = pickle.load(f)
-    elif size == 2:
-        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), '2lr_scaler'), 'rb') as f:
-            scaler = pickle.load(f)
+    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "keras_models", f'{redshift_range}_{n_inputs}_scaler'), 'rb') as f:
+        scaler = joblib.load(f)
+
     return scaler
 
+
 # %%
-def predict_high_redshift(spec_arr):
+def predict_redshift(spec_arr, redshift_range=[0, 1.5], n_inputs=4):
     """ 
     Parameters
     --------------
@@ -83,83 +64,10 @@ def predict_high_redshift(spec_arr):
         N length array contained predicted array values
     """
 
-    if spec_arr.shape[1] == 4:
-        model = get_redshift_predictor()
-        scaler = get_r_scaler(4)
-        scaled_spec_arr = scaler.transform(spec_arr)
-        pred_redshift = model.predict(scaled_spec_arr)
-    elif spec_arr.shape[1] == 2:
-        model = load(os.path.join(os.path.dirname(os.path.realpath(__file__)), '2r_predictor'))
-        scaler = get_r_scaler(2)
-        scaled_spec_arr = scaler.transform(spec_arr)
-        pred_redshift = model.predict(scaled_spec_arr)
-    else:
-        raise Exception("Invalid input array shape should be Nx2 or Nx4")
+    scaler = get_r_scaler(redshift_range=redshift_range, n_inputs=n_inputs)
+    model = get_redshift_predictor(redshift_range=redshift_range, n_inputs=n_inputs)
 
-    return pred_redshift
-
-# %%
-def predict_low_redshift(spec_arr):
-    """ 
-    Parameters
-    --------------
-    spec_arr : numpy.array
-        Nx4 or Nx2 array containing magnitudes of W1, W2, W3, W4 bands, or W2 W2 bands
+    scaled_spec_arr = scaler.transform(spec_arr)
+    pred_redshift = model.predict(scaled_spec_arr)
     
-    Returns
-    --------------
-    pred_redshift : numpy.array
-        N length array contained predicted array values
-    """
-
-    if spec_arr.shape[1] == 4:
-        model = get_redshift_predictor()
-        scaler = get_lr_scaler(4)
-        scaled_spec_arr = scaler.transform(spec_arr)
-        pred_redshift = model.predict(scaled_spec_arr)
-    elif spec_arr.shape[1] == 2:
-        model = load(os.path.join(os.path.dirname(os.path.realpath(__file__)), '2lr_predictor'))
-        scaler = get_lr_scaler(2)
-        scaled_spec_arr = scaler.transform(spec_arr)
-        pred_redshift = model.predict(scaled_spec_arr)
-    else:
-        raise Exception("Invalid input array shape should be Nx2 or Nx4")
-
-    return pred_redshift
-
-# %%
-def predict_redshift(spec_arr):
-    """ 
-    Parameters
-    --------------
-    spec_arr : numpy.array
-        Nx4 or Nx2 array containing magnitudes of W1, W2, W3, W4 bands or W1, W2 bands
-    
-    Returns
-    --------------
-    pred_redshift : numpy.array
-        N length array contained predicted array values
-    """
-
-    if spec_arr.shape[1] == 4:
-        # Predicting higher
-        high_redshift = predict_high_redshift(spec_arr)
-
-        # Predicting lower
-        low_redshift = predict_low_redshift(spec_arr)
-
-        pred_redshift = (high_redshift + low_redshift) / 2
-
-    elif spec_arr.shape[1] == 2:
-        # Predicting higher
-        high_redshift = predict_high_redshift(spec_arr)
-
-        # Predicting lower
-        low_redshift = predict_low_redshift(spec_arr)
-
-        pred_redshift = (high_redshift + low_redshift) / 2
-    
-    else:
-        raise Exception("Invalid input array shape should be Nx2 or Nx4")
-
     return pred_redshift

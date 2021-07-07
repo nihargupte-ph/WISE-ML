@@ -1,0 +1,26 @@
+-- This query does a table JOIN between the imaging (PhotoObj) and spectra
+-- (SpecObj) tables and includes the necessary columns in the SELECT to upload
+-- the results to the SAS (Science Archive Server) for FITS file retrieval.
+SELECT
+   p.objid,p.dered_u,p.dered_g,p.dered_r,p.dered_i,p.dered_z,
+   s.specobjid, s.class, s.z as redshift
+FROM PhotoObj AS p
+   JOIN SpecObj AS s ON s.bestobjid = p.objid
+WHERE 
+   s.z > 0 AND s.z < 1
+
+
+# #%%
+# df = pd.read_csv("/home/n/Documents/Research/etc_codes/ANNZ/data/photoZ/train/WISE_test_4.csv", header=0, names=['REDSHIFT', 'W1mag', 'e_W1mag', 'W2mag', 'e_W2mag', 'W3mag', 'e_W3mag', 'W4mag', 'e_W4mag'])
+# df = train_test_W1W2W3W4
+y_trg = target
+# X_test_ANNZ = df.iloc[:, 2::2]
+X_test_ANNZ = features
+X_test_ANNZ_scl = scaler_x.transform(X_test_ANNZ)
+y_reg = model.predict(X_test_ANNZ_scl).ravel()
+err = (y_reg - y_trg) / y_trg
+plt.figure(figsize=(8,6))
+plt.ylabel("Counts")
+plt.xlabel(r"$(z_{reg} - z_{trg})/z_{trg}$")
+plt.hist(err, bins=1000, range=[-1, 10])
+plt.savefig("/home/n/Documents/Research/WISE-ML/plots/err_new.pdf")
