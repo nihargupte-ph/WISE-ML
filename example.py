@@ -13,19 +13,19 @@ from wise_ml.models import misc_functions
 # of redshifts that you want to predict. Right now I've trained a range of [0, 1.5] for both 2 and 4 bands. So if you just want to use the predictor,
 # just specify redshift_range = [0, 1.5] and n_inputs = 2 or 4 to predictors.predict_redshift
 # Example below
-redshift_range = [0, 1.5]
-predict_W1W2, predict_W1W2W3W4, train_test_W1W2, train_test_W1W2W3W4 = misc_functions.load_data()
-pd_truth = ((redshift_range[0] < train_test_W1W2W3W4['REDSHIFT']) & (train_test_W1W2W3W4['REDSHIFT'] < redshift_range[1]))
-y_test = train_test_W1W2W3W4.loc[pd_truth]['REDSHIFT']
+# redshift_range = [0, 1.5]
+# predict_W1W2, predict_W1W2W3W4, train_test_W1W2, train_test_W1W2W3W4 = misc_functions.load_data()
+# pd_truth = ((redshift_range[0] < train_test_W1W2W3W4['REDSHIFT']) & (train_test_W1W2W3W4['REDSHIFT'] < redshift_range[1]))
+# y_test = train_test_W1W2W3W4.loc[pd_truth]['REDSHIFT']
 
-# Selecting only bands 1 and 2 since above we had n_inputs = 2. If you want to predict 4 change this 6 
-# to a 10 basically
-features = train_test_W1W2W3W4.loc[pd_truth].iloc[:, 2:6:2]
+# # Selecting only bands 1 and 2 since above we had n_inputs = 2. If you want to predict 4 change this 6 
+# # to a 10 basically
+# features = train_test_W1W2W3W4.loc[pd_truth].iloc[:, 2:6:2]
 
-# Prediction
-y_pred = predictors.predict_redshift(features, redshift_range = redshift_range, n_inputs = 2)
-plt.scatter(y_pred, y_test, s=1)
-plt.show()
+# # Prediction
+# y_pred = predictors.predict_redshift(features, redshift_range = redshift_range, n_inputs = 2)
+# plt.scatter(y_pred, y_test, s=1)
+# plt.show()
 
 # %%
 # This is the training module I just implemented. Basically you can train whatever range you would like while also selecting the number of inputs
@@ -40,7 +40,7 @@ plt.show()
 # So just specify the range you are interested in and it will train for that range
 redshift_range = [0, 1.5]
 # Below select the number of inputs (n_inputs)
-predict_redshift = training.train_standard_architecture(redshift_range, n_inputs=2)
+predict_redshift = training.train_standard_architecture(redshift_range, n_inputs=4)
 
 # Usage, note it returns a function which you can then call eg
 # first getting the data from the dataset and only selecting redshifts within 0 to 1.5
@@ -50,12 +50,13 @@ y_test = train_test_W1W2W3W4.loc[pd_truth]['REDSHIFT']
 
 # Selecting only bands 1 and 2 since above we had n_inputs = 2. If you want to train 4 change this 6 
 # to a 10 basically
-features = train_test_W1W2W3W4.loc[pd_truth].iloc[:, 2:6:2]
+features = train_test_W1W2W3W4.loc[pd_truth].iloc[:, 2:10:2]
 
 # Predicting data
 y_pred = predict_redshift(features)
 
-# I believe this is the plot Prof Marka suggested. I'm not sure what fonts etc to use but they can be edited here. This is done on the training set
+# I believe this is the plot Prof Marka suggested. I'm not sure what fonts etc to use but they can be edited here. This is done on the training set 
+# but test is similar
 plt.xlabel('Target Redshift')
 plt.ylabel('Regressed Redshift')
 plt.scatter(y_test, y_pred, s=1)
@@ -84,28 +85,30 @@ plt.plot([np.min(y_pred), np.max(y_pred)], [np.min(y_pred), np.max(y_pred)], zor
 plt.show()
 # %%
 # Tried to recreate the histogram you mentioned with the below 0 values and was unable
-# Perhaps it was some old model detail? I'm not entirely sure but anyway this one at least
-# Gives me positive results
+# Perhaps it was some old model detail? I'm not entirely sure. This one gives postive
+# results. My guess is the negative ones are some artifact of having such a small network/input size
+# If you get negative results again I think you should be able to throw them out
+redshift_range = [0, 1.5]
 predict_W1W2, predict_W1W2W3W4, train_test_W1W2, train_test_W1W2W3W4 = misc_functions.load_data()
 pd_truth = ((redshift_range[0] < train_test_W1W2W3W4['REDSHIFT']) & (train_test_W1W2W3W4['REDSHIFT'] < redshift_range[1]))
 
-train_test_features = train_test_W1W2W3W4.loc[pd_truth].iloc[:, 2:10:2]
-predict_features = predict_W1W2W3W4.iloc[:, 2:10:2]
+train_test_features = train_test_W1W2W3W4.loc[pd_truth].iloc[:, 2:6:2]
+predict_features = predict_W1W2W3W4.iloc[:, 2:6:2]
 
 # Predicting data
-y_prediction = predictors.predict_redshift(predict_features, redshift_range = redshift_range, n_inputs = 4)
-y_train_test = predictors.predict_redshift(train_test_features, redshift_range = redshift_range, n_inputs = 4)
+y_prediction = predictors.predict_redshift(predict_features, redshift_range = redshift_range, n_inputs = 2)
+y_train_test = predictors.predict_redshift(train_test_features, redshift_range = redshift_range, n_inputs = 2)
 
 fig, axs = plt.subplots(2)
 axs[0].set_xlabel("Regressed Value (Prediction Set)")
 axs[0].set_ylabel("Counts")
 axs[0].hist(y_prediction, bins=100)
-print(np.where(y_pred < 0)) # Empty array
+print(np.where(y_prediction < 0)) # Empty array
 
 axs[1].set_xlabel("Regressed Value (Training Set)")
 axs[1].set_ylabel("Counts")
 axs[1].hist(y_train_test, bins=100)
-print(np.where(y_test < 0)) # Empty array
+print(np.where(y_train_test < 0)) # Empty array
 
 
 # %%

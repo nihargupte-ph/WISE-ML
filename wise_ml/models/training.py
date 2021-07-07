@@ -52,7 +52,6 @@ def train_standard_architecture(redshift_range=[0, 1.5], n_inputs=4, save=True):
     X = features
     y = target.ravel()
     indices = np.arange(target.shape[0])
-    print(X.shape, y.shape)
     X_train, X_test, y_train, y_test, ind_train, ind_test = train_test_split(X, y, indices, test_size=0.05)
 
 
@@ -76,6 +75,10 @@ def train_standard_architecture(redshift_range=[0, 1.5], n_inputs=4, save=True):
     # If you want to view the history you can do stuff with it in here
     history = model.fit(X_train, y_train, epochs=30, batch_size=32,  verbose=1, validation_split=0.1)
 
+    import matplotlib.pyplot as plt
+    plt.scatter(model.predict(X_test), y_test)
+    plt.show()
+    
     # Saving the model and scaler
     model.save(os.path.join(os.path.dirname(os.path.realpath(__file__)), "keras_models", f'{redshift_range}_{n_inputs}_predictor.h5'))
     joblib.dump(scaler_x, os.path.join(os.path.dirname(os.path.realpath(__file__)), "keras_models", f'{redshift_range}_{n_inputs}_scaler'))
