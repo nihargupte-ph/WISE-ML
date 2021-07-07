@@ -86,15 +86,25 @@ plt.show()
 # Tried to recreate the histogram you mentioned with the below 0 values and was unable
 # Perhaps it was some old model detail? I'm not entirely sure but anyway this one at least
 # Gives me positive results
+predict_W1W2, predict_W1W2W3W4, train_test_W1W2, train_test_W1W2W3W4 = misc_functions.load_data()
+pd_truth = ((redshift_range[0] < train_test_W1W2W3W4['REDSHIFT']) & (train_test_W1W2W3W4['REDSHIFT'] < redshift_range[1]))
+
+train_test_features = train_test_W1W2W3W4.loc[pd_truth].iloc[:, 2:10:2]
+predict_features = predict_W1W2W3W4.iloc[:, 2:10:2]
+
+# Predicting data
+y_prediction = predictors.predict_redshift(predict_features, redshift_range = redshift_range, n_inputs = 4)
+y_train_test = predictors.predict_redshift(train_test_features, redshift_range = redshift_range, n_inputs = 4)
+
 fig, axs = plt.subplots(2)
-axs[0].set_xlabel("Prediction")
+axs[0].set_xlabel("Regressed Value (Prediction Set)")
 axs[0].set_ylabel("Counts")
-axs[0].hist(y_pred, bins=100)
+axs[0].hist(y_prediction, bins=100)
 print(np.where(y_pred < 0)) # Empty array
 
-axs[1].set_xlabel("Actual")
+axs[1].set_xlabel("Regressed Value (Training Set)")
 axs[1].set_ylabel("Counts")
-axs[1].hist(y_test, bins=100)
+axs[1].hist(y_train_test, bins=100)
 print(np.where(y_test < 0)) # Empty array
 
 
