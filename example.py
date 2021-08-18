@@ -6,6 +6,8 @@ from wise_ml.models import predictors
 from wise_ml.models import training
 from wise_ml.models import misc_functions
 
+
+
 # %%
 # So this is the old method that you were using earlier. Only difference is I've done away with the low+high redshift averaging now that we have a 
 # better estimate on the range of redshift we are expecting. That is if you are only interested in the redshift region between 0 and 1 it is better to
@@ -40,7 +42,7 @@ from wise_ml.models import misc_functions
 # So just specify the range you are interested in and it will train for that range
 redshift_range = [0, 1.5]
 # Below select the number of inputs (n_inputs)
-predict_redshift = training.train_standard_architecture(redshift_range, n_inputs=4)
+predict_redshift = training.train_standard_architecture(redshift_range, n_inputs=2)
 
 # Usage, note it returns a function which you can then call eg
 # first getting the data from the dataset and only selecting redshifts within 0 to 1.5
@@ -50,7 +52,7 @@ y_test = train_test_W1W2W3W4.loc[pd_truth]['REDSHIFT']
 
 # Selecting only bands 1 and 2 since above we had n_inputs = 2. If you want to train 4 change this 6 
 # to a 10 basically
-features = train_test_W1W2W3W4.loc[pd_truth].iloc[:, 2:10:2]
+features = train_test_W1W2W3W4.loc[pd_truth].iloc[:, 2:6:2]
 
 # Predicting data
 y_pred = predict_redshift(features)
@@ -62,6 +64,8 @@ plt.ylabel('Regressed Redshift')
 plt.scatter(y_test, y_pred, s=1)
 plt.plot([np.min(y_pred), np.max(y_pred)], [np.min(y_pred), np.max(y_pred)], zorder=5, color='orange')
 plt.show()
+
+print(y_pred[np.where(y_pred < 0)])
 
 # %%
 # Perhaps more clear is a variant of the above plot but this time encoding density also (density scatter plot)

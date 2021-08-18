@@ -5,6 +5,7 @@ from joblib import dump, load
 import joblib
 
 from tensorflow import keras
+import tensorflow as tf
 
 #%%
 def get_redshift_predictor(redshift_range=[0, 1.5], n_inputs=4):
@@ -25,7 +26,8 @@ def get_redshift_predictor(redshift_range=[0, 1.5], n_inputs=4):
         full redshift tensorflow model
     """
 
-    model = keras.models.load_model(os.path.join(os.path.dirname(os.path.realpath(__file__)), "keras_models", f'{redshift_range}_{n_inputs}_predictor.h5'))
+    model = keras.models.load_model(os.path.join(os.path.dirname(os.path.realpath(__file__)), "keras_models", f'{redshift_range}_{n_inputs}_predictor.h5'),
+    custom_objects={"abs":tf.math.abs})
     return model
 
 # %%

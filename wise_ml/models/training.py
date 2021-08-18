@@ -6,6 +6,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Input, Dropout
 from sklearn.model_selection import train_test_split
 import joblib
+import tensorflow as tf
 
 from . import misc_functions
 
@@ -66,7 +67,7 @@ def train_standard_architecture(redshift_range=[0, 1.5], n_inputs=4, save=True):
     model = Sequential()
     model.add(Dense(10, input_shape=(X_train.shape[1],), kernel_initializer='normal', activation='relu'))
     model.add(Dense(10, activation='relu'))
-    model.add(Dense(1, activation='linear'))
+    model.add(Dense(1, activation=tf.math.abs))
     model.summary()
 
     #Compiling and Training
@@ -75,10 +76,7 @@ def train_standard_architecture(redshift_range=[0, 1.5], n_inputs=4, save=True):
     # If you want to view the history you can do stuff with it in here
     history = model.fit(X_train, y_train, epochs=30, batch_size=32,  verbose=1, validation_split=0.1)
 
-    import matplotlib.pyplot as plt
-    plt.scatter(model.predict(X_test), y_test)
-    plt.show()
-    
+   
     # Saving the model and scaler
     model.save(os.path.join(os.path.dirname(os.path.realpath(__file__)), "keras_models", f'{redshift_range}_{n_inputs}_predictor.h5'))
     joblib.dump(scaler_x, os.path.join(os.path.dirname(os.path.realpath(__file__)), "keras_models", f'{redshift_range}_{n_inputs}_scaler'))
